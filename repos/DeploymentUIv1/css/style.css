@@ -1,0 +1,54 @@
+body{
+	background-color:#151414;
+}
+
+
+
+.navbar .navbar-nav .nav-item.active .nav-link,
+.navbar .navbar-nav .nav-item.active .nav-link:hover,
+.navbar .navbar-nav .nav-item.active .nav-link:focus,
+.navbar .navbar-nav .nav-item.show .nav-link,
+.navbar .navbar-nav .nav-item.show .nav-link:hover,
+.navbar .navbar-nav .nav-item.show .nav-link:focus {
+  color: #ffffff;
+  background-color: #000000;
+}
+.navbar .navbar-toggle {
+  border-color: #000000;
+}
+.navbar .navbar-toggle:hover,
+.navbar .navbar-toggle:focus {
+  background-color: #000000;
+}
+.navbar.navbar-expand-sm.bg-dark.navbar-dark{
+	padding-top: 0px;
+	padding-bottom: 0px;
+	padding-left: 0px;
+}
+#username{
+	background-color: #272627;
+	color: #ffffff;
+}
+.jumbotron{
+	text-align: center;
+	margin-top: 10px;
+}
+label{
+	color: #ffffff;
+}
+.space{
+	height: 30px;
+}
+#tablecontainer{
+	width: 90%;
+	margin-left: 5%;
+}
+#historytable_length{
+	margin-left: 5%;
+}
+#selectcolumns{
+	color: #ffffff;
+}
+a{
+	color:#ffffff !important;
+}

@@ -1,0 +1,238 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "VmStorage10232017Type": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_ZRS",
+        "Standard_GRS",
+        "Standard_RAGRS",
+        "Premium_LRS"
+      ]
+    },
+    "myVMName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "myVMAdminUserName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "myVMAdminPassword": {
+      "type": "securestring"
+    },
+    "myVMWindowsOSVersion": {
+      "type": "string",
+      "defaultValue": "2012-R2-Datacenter",
+      "allowedValues": [
+        "2008-R2-SP1",
+        "2012-Datacenter",
+        "2012-R2-Datacenter",
+        "Windows-Server-Technical-Preview"
+      ]
+    },
+    "myIpDnsName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "_artifactsLocation": {
+      "type": "string",
+      "metadata": {
+        "description": "Auto-generated container in staging storage account to receive post-build staging folder upload"
+      }
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Auto-generated token to access _artifactsLocation"
+      }
+    }},
+  "variables": {
+    "VmStorage10232017Name": "[concat('vmstorage', uniqueString(resourceGroup().id))]",
+    "myVnetPrefix": "10.0.0.0/16",
+    "myVnetSubnet1Name": "Subnet-1",
+    "myVnetSubnet1Prefix": "10.0.0.0/24",
+    "myVnetSubnet2Name": "Subnet-2",
+    "myVnetSubnet2Prefix": "10.0.1.0/24",
+    "myVMImagePublisher": "MicrosoftWindowsServer",
+    "myVMImageOffer": "WindowsServer",
+    "myVMOSDiskName": "myVMOSDisk",
+    "myVMVmSize": "Standard_D2_v2",
+    "myVMVnetID": "[resourceId('Microsoft.Network/virtualNetworks', 'myVnet')]",
+    "myVMSubnetRef": "[concat(variables('myVMVnetID'), '/subnets/', variables('myVnetSubnet1Name'))]",
+    "myVMStorageAccountContainerName": "vhds",
+    "myVMNicName": "[concat(parameters('myVMName'), 'NetworkInterface')]",
+    "myIpName": "myIp",
+    "myCustomScriptScriptFolder": "CustomScripts",
+    "myCustomScriptScriptFileName": "myCustomScript.ps1",
+    "myscriptScriptFolder": "CustomScripts",
+    "myscriptScriptFileName": "myscript.ps1"},
+  "resources": [
+    {
+      "name": "[variables('VmStorage10232017Name')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-01-01",
+      "sku": {
+        "name": "[parameters('VmStorage10232017Type')]"
+      },
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "VmStorage10232017"
+      },
+      "kind": "Storage"
+    },
+    {
+      "name": "myVnet",
+      "type": "Microsoft.Network/virtualNetworks",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "myVnet"
+      },
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('myVnetPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('myVnetSubnet1Name')]",
+            "properties": {
+              "addressPrefix": "[variables('myVnetSubnet1Prefix')]"
+            }
+          },
+          {
+            "name": "[variables('myVnetSubnet2Name')]",
+            "properties": {
+              "addressPrefix": "[variables('myVnetSubnet2Prefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('myVMNicName')]",
+      "type": "Microsoft.Network/networkInterfaces",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', 'myVnet')]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('myIpName'))]"
+      ],
+      "tags": {
+        "displayName": "myVMNic"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('myVMSubnetRef')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('myIpName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[parameters('myVMName')]",
+      "type": "Microsoft.Compute/virtualMachines",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-06-15",
+      "dependsOn": [
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('VmStorage10232017Name'))]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('myVMNicName'))]"
+      ],
+      "tags": {
+        "displayName": "myVM"
+      },
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[variables('myVMVmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[parameters('myVMName')]",
+          "adminUsername": "[parameters('myVMAdminUsername')]",
+          "adminPassword": "[parameters('myVMAdminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "[variables('myVMImagePublisher')]",
+            "offer": "[variables('myVMImageOffer')]",
+            "sku": "[parameters('myVMWindowsOSVersion')]",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "myVMOSDisk",
+            "vhd": {
+              "uri": "[concat(reference(resourceId('Microsoft.Storage/storageAccounts', variables('VmStorage10232017Name')), '2016-01-01').primaryEndpoints.blob, variables('myVMStorageAccountContainerName'), '/', variables('myVMOSDiskName'), '.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('myVMNicName'))]"
+            }
+          ]
+        }
+      },
+      "resources": [
+        {
+          "name": "myscript",
+          "type": "extensions",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2016-03-30",
+          "dependsOn": [
+            "[resourceId('Microsoft.Compute/virtualMachines', parameters('myVMName'))]"
+          ],
+          "tags": {
+            "displayName": "myscript"
+          },
+          "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "CustomScriptExtension",
+            "typeHandlerVersion": "1.4",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              "fileUris": [
+                "[concat(parameters('_artifactsLocation'), '/', variables('myscriptScriptFolder'), '/', variables('myscriptScriptFileName'), parameters('_artifactsLocationSasToken'))]"
+              ],
+              "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File ', variables('myscriptScriptFolder'), '/', variables('myscriptScriptFileName'))]"
+            }
+          }
+        }
+        
+      ]
+    },
+    {
+      "name": "[variables('myIpName')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-03-30",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "myIp"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('myIpDnsName')]"
+        }
+      }
+    }],
+  "outputs": {}
+}

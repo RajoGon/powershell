@@ -1,0 +1,48 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "rgsqlAdminLogin": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rgsqlAdminLoginPassword": {
+      "type": "securestring"
+    },
+    "serverName": {
+      "type": "string"
+    } 
+  },
+  "variables": {},
+  "resources": [
+    {
+      "name": "[parameters('serverName')]",
+      "type": "Microsoft.Sql/servers",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2014-04-01-preview",
+      "dependsOn": [ ],
+      "tags": {
+        "displayName": "rgsql"
+      },
+      "properties": {
+        "administratorLogin": "[parameters('rgsqlAdminLogin')]",
+        "administratorLoginPassword": "[parameters('rgsqlAdminLoginPassword')]"
+      },
+      "resources": [
+        {
+          "name": "AllowAllWindowsAzureIps",
+          "type": "firewallrules",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2014-04-01-preview",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', parameters('serverName'))]"
+          ],
+          "properties": {
+            "startIpAddress": "199.207.253.94",
+            "endIpAddress": "199.207.253.96"
+          }
+        }
+      ]
+    }],
+  "outputs": {}
+}

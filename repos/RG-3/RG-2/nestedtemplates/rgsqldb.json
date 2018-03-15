@@ -1,0 +1,58 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "rgdatabaseName": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rgdatabaseCollation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "rgdatabaseEdition": {
+      "type": "string",
+      "allowedValues": [
+        "Basic",
+        "Standard",
+        "Premium"
+      ]
+    },
+    "rgdatabaseRequestedServiceObjectiveName": {
+      "type": "string",
+      "allowedValues": [
+        "Basic",
+        "S0",
+        "S1",
+        "S2",
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "metadata": {
+        "description": "Describes the performance level for Edition"
+      }
+    },
+    "serverName": {
+      "type": "string"
+    }},
+  "variables": {},
+  "resources": [
+    {
+      "name": "[concat(parameters('serverName'), '/', parameters('rgdatabaseName'))]",
+      "type": "Microsoft.Sql/servers/databases",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2014-04-01-preview",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "rgdatabase"
+      },
+      "properties": {
+        "collation": "[parameters('rgdatabaseCollation')]",
+        "edition": "[parameters('rgdatabaseEdition')]",
+        "maxSizeBytes": "2147483648",
+        "requestedServiceObjectiveName": "[parameters('rgdatabaseRequestedServiceObjectiveName')]"
+      }
+    }],
+  "outputs": {}
+}

@@ -1,0 +1,116 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "_artifactsLocation": {
+      "type": "string"
+    },
+    "_artifactsLocationSasToken": {
+      "type": "securestring"
+    }},
+  "variables": {
+    "dataFactoryTemplateFolder": "nestedtemplates",
+    "dataFactoryTemplateFileName": "dataFactory.json",
+    "dataFactoryTemplateParametersFileName": "dataFactory.parameters.json",
+    "rgstoreTemplateFolder": "nestedtemplates",
+    "rgstoreTemplateFileName": "rgstore.json",
+    "rgstoreTemplateParametersFileName": "rgstore.parameters.json",
+    "dbTemplateFolder": "nestedtemplates",
+    "dbTemplateFileName": "db.json",
+    "dbTemplateParametersFileName": "db.parameters.json",
+    "rgsqldbTemplateFolder": "nestedtemplates",
+    "rgsqldbTemplateFileName": "rgsqldb.json",
+    "rgsqldbTemplateParametersFileName": "rgsqldb.parameters.json"},
+  "resources": [
+    {
+      "name": "dataFactory",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [ ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('dataFactoryTemplateFolder'), '/', variables('dataFactoryTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "dataFactoryName": {
+            "value": "[concat('rgdatafactory', uniqueString(resourceGroup().id))]"
+          }
+        }
+      }
+    },
+    {
+      "name": "rgstore",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [ ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('rgstoreTemplateFolder'), '/', variables('rgstoreTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "rgstoreType": {
+            "value": "Standard_LRS"
+          }
+        }
+      }
+    },
+    {
+      "name": "db",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [ ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('dbTemplateFolder'), '/', variables('dbTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "serverName": {
+            "value": "[concat('rgsql', uniqueString(resourceGroup().id))]"
+          },
+          "rgsqlAdminLogin": {
+            "value": "rajorshidb"
+          },
+          "rgsqlAdminLoginPassword": {
+            "value": "snkdfkjn21#!$#^1.213@!$ga#$"
+          }
+        }
+      }
+    },
+    {
+      "name": "rgsqldb",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-09-01",
+      "dependsOn": [ "db" ],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[concat(parameters('_artifactsLocation'), '/', variables('rgsqldbTemplateFolder'), '/', variables('rgsqldbTemplateFileName'), parameters('_artifactsLocationSasToken'))]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "serverName": {
+            "value": "[concat('rgsql', uniqueString(resourceGroup().id))]"
+          },
+          "rgdatabaseName": {
+            "value": "rgdatabase"
+          },
+          "rgdatabaseCollation": {
+            "value": "SQL_Latin1_General_CP1_CI_AS"
+          },
+          "rgdatabaseEdition": {
+            "value": "Basic"
+          },
+          "rgdatabaseRequestedServiceObjectiveName": {
+            "value": "Basic"
+          }
+        }
+      }
+    }],
+  "outputs": {}
+}
